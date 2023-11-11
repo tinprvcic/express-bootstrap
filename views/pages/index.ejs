@@ -6,6 +6,14 @@
     <title>Home page</title>
   </head>
   <body>
-    Look at me ma!
+    <p>Look at me ma!</p>
+    <p>The list of users:</p>
+
+    <% users.forEach((user) => { %>
+    <p>
+      User <strong><%= user.username %></strong> has password
+      <strong><%= user.password %></strong>
+    </p>
+    <% }) %>
   </body>
 </html>
