@@ -13,7 +13,7 @@ const action = async () => {
   });
 
   await db.execute(
-    "create table users (user_id int primary key auto_increment, username varchar(40) not null, password varchar(40) not null);"
+    "create table users (user_id int primary key auto_increment, username varchar(40) not null, password varchar(60) not null);"
   );
 
   db.destroy();

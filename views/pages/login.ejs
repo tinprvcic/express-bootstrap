@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Log in</title>
+  </head>
+  <body>
+    <form action="/api/login" method="post">
+      <% if (error) { %>
+      <legend>Incorrect username or password.</legend>
+      <% } %>
+
+      <div>
+        <Label>
+          Username:
+          <input type="text" name="username" id="username" />
+        </Label>
+      </div>
+
+      <div>
+        <Label>
+          Password:
+          <input type="password" name="password" id="password" />
+        </Label>
+      </div>
+
+      <input type="submit" value="Log in" />
+    </form>
+  </body>
+</html>

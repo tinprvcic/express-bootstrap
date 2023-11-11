@@ -15,5 +15,9 @@
       <strong><%= user.password %></strong>
     </p>
     <% }) %>
+
+    <form action="/api/logout" method="post">
+      <input type="submit" value="Log out" />
+    </form>
   </body>
 </html>
