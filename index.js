@@ -1,6 +1,7 @@
 require("dotenv").config();
 
 const session = require("express-session");
+var LokiStore = require("connect-loki")(session);
 const mysql = require("mysql2/promise");
 var express = require("express");
 const { getPasswordHash, checkPasswordHash } = require("./util");
@@ -24,6 +25,7 @@ async function main() {
       secret: process.env.SESSION_SECRET,
       resave: true,
       saveUninitialized: false,
+      store: new LokiStore(),
     })
   );
   app.use(express.json());
