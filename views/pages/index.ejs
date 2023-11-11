@@ -5,19 +5,107 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Home page</title>
   </head>
-  <body>
-    <p>Look at me ma!</p>
-    <p>The list of users:</p>
+  <body
+    style="
+      width: 100%;
+      min-height: 100%;
+      align-items: center;
+      display: flex;
+      flex-direction: column;
+      font-family: 'Segoe UI', Inter, Tahoma, Geneva, Verdana, sans-serif;
+      box-sizing: border-box;
+      margin: 0;
+      padding: 20px;
+    "
+  >
+    <div>
+      <div
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        "
+      >
+        <p>Prijavljeni ste kao: <strong><%= user.username %></strong></p>
 
-    <% users.forEach((user) => { %>
-    <p>
-      User <strong><%= user.username %></strong> has password
-      <strong><%= user.password %></strong>
-    </p>
-    <% }) %>
+        <form action="/api/logout" method="post">
+          <input type="submit" value="Odjava" />
+        </form>
+      </div>
+      <hr />
 
-    <form action="/api/logout" method="post">
-      <input type="submit" value="Log out" />
-    </form>
+      <div style="flex-direction: column; display: flex; gap: 24px">
+        <div>
+          <% posts.forEach((p) => { %>
+          <form
+            method="post"
+            action="<%= `/api/delete_post/${p.id}` %>"
+            style="display: flex; gap: 16px; align-items: center"
+          >
+            <p><%= p.author %></p>
+            <% if (user.xss) { %>
+            <p><%- p.content %></p>
+            <% } else { %>
+            <p><%= p.content %></p>
+            <% } %> <% if (p.viewerIsAuthor) { %>
+            <input type="submit" value="Obriši" />
+            <% } %>
+          </form>
+          <% }); %>
+        </div>
+
+        <form
+          method="post"
+          action="/api/add_post"
+          style="display: flex; gap: 24px; align-items: center"
+        >
+          <label>
+            <input type="text" name="content" id="content" />
+          </label>
+
+          <input type="submit" value="Dodaj objavu" />
+        </form>
+
+        <form
+          method="post"
+          action="<%= `/api/toggle_xss/${user.xss ? 0 : 1}` %>"
+          style="display: flex; align-items: center; gap: 24px"
+        >
+          <p>XSS <strong><%= user.xss ? "je" : "nije" %></strong> omogućen</p>
+          <input value="<%= user.xss ? "Onemogući XSS" : "Omogući XSS" %>"
+          type="submit" />
+        </form>
+      </div>
+
+      <hr />
+
+      <p>
+        "Sensitive Data Exposure" ranjivost
+        <strong><%= user.sde ? "je" : "nije" %></strong>
+        uključena. Zapis Vaše zaporke u bazi je:
+      </p>
+      <p>
+        <strong style="word-break: break-all"><%= user.password %></strong>
+      </p>
+
+      <form action="/api/change_password" method="post">
+        <div>
+          <label>
+            Nova zaporka:
+            <input type="password" name="password" id="password" required />
+          </label>
+
+          <div>
+            <label>
+              <input type="checkbox" id="sde" name="sde" value="sde" />
+              Uključi "Sensitive Data Exposure" ranjivost (nemoj spremiti
+              zaporku na siguran način)
+            </label>
+          </div>
+        </div>
+
+        <input type="submit" value="Promijeni zaporku" />
+      </form>
+    </div>
   </body>
 </html>

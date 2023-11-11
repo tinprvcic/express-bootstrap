@@ -13,7 +13,11 @@ const action = async () => {
   });
 
   await db.execute(
-    "create table users (user_id int primary key auto_increment, username varchar(40) not null, password varchar(60) not null);"
+    "create table users (user_id int primary key auto_increment, username varchar(40) not null unique, password varchar(60) not null, xss_enabled boolean not null default 0, sde_enabled boolean not null default 0);"
+  );
+
+  await db.execute(
+    "create table posts (post_id int primary key auto_increment, content varchar(255), user_id int not null, key user_id_idx (user_id));"
   );
 
   db.destroy();

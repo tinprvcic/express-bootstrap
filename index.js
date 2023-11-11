@@ -30,11 +30,23 @@ async function main() {
   app.use(express.urlencoded({ extended: true }));
 
   app.get("/", async function (req, res) {
-    const usersRes = await db.execute("select username, password from users;");
-
     if (!req.session.isAuthenticated) return res.redirect("login");
 
-    res.render("pages/index", { users: usersRes[0] });
+    const usersRes = await db.execute(
+      "select username, password, sde_enabled as sde, xss_enabled as xss from users where user_id=?;",
+      [req.session.userId]
+    );
+    const user = usersRes[0][0];
+
+    const postsRes = await db.execute(
+      "select post_id as id, content, username as author, users.user_id as authorId from users inner join posts on users.user_id = posts.user_id;"
+    );
+    const posts = postsRes[0].map((p) => ({
+      ...p,
+      viewerIsAuthor: p.authorId === req.session.userId,
+    }));
+
+    res.render("pages/index", { user, posts });
   });
 
   app.get("/login", async function (req, res) {
@@ -51,9 +63,10 @@ async function main() {
 
   app.post("/api/login", async function (req, res) {
     const { username, password: plainTextPassword } = req.body;
-    const userRes = await db.execute("select * from users where username = ?", [
-      username,
-    ]);
+    const userRes = await db.execute(
+      "select user_id as id, sde_enabled as sde, password from users where username = ?",
+      [username]
+    );
 
     const user = userRes[0][0];
 
@@ -62,13 +75,18 @@ async function main() {
       return res.redirect("/login");
     }
 
-    if (!(await checkPasswordHash(plainTextPassword, user.password))) {
+    // allow log in when sde is enabled (to not get locked out of the account)
+    const isValidPassword = user.sde
+      ? plainTextPassword == user.password
+      : await checkPasswordHash(plainTextPassword, user.password);
+
+    if (!isValidPassword) {
       req.session.loginError = true;
       return res.redirect("/login");
     }
 
     req.session.isAuthenticated = true;
-    req.session.id = user.id;
+    req.session.userId = user.id;
 
     res.redirect("/");
   });
@@ -77,6 +95,45 @@ async function main() {
     req.session.destroy();
 
     res.redirect("/login");
+  });
+
+  app.post("/api/change_password", async function (req, res) {
+    const { password, sde } = req.body;
+
+    const newPassword = sde ? password : await getPasswordHash(password);
+
+    await db.execute(
+      "update users set password = ?, sde_enabled = ? where user_id = ?",
+      [newPassword, Boolean(sde), req.session.userId]
+    );
+
+    res.redirect("/");
+  });
+
+  app.post("/api/delete_post/:id", async function (req, res) {
+    db.execute("delete from posts where post_id=?", [req.params.id]);
+
+    res.redirect("/");
+  });
+
+  app.post("/api/add_post", async function (req, res) {
+    const { content } = req.body;
+
+    db.execute("insert into posts(content, user_id) values (?, ?)", [
+      content,
+      req.session.userId,
+    ]);
+
+    res.redirect("/");
+  });
+
+  app.post("/api/toggle_xss/:newState", async function (req, res) {
+    db.execute("update users set xss_enabled = ? where user_id = ?", [
+      req.params.newState === "1" ? true : false,
+      req.session.userId,
+    ]);
+
+    res.redirect("/");
   });
 
   // handle 404s

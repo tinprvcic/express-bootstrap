@@ -8,24 +8,24 @@
   <body>
     <form action="/api/login" method="post">
       <% if (error) { %>
-      <legend>Incorrect username or password.</legend>
+      <legend>Neispravno korisničko ime ili zaporka.</legend>
       <% } %>
 
       <div>
-        <Label>
-          Username:
+        <label>
+          Korisničko ime:
           <input type="text" name="username" id="username" />
-        </Label>
+        </label>
       </div>
 
       <div>
-        <Label>
-          Password:
+        <label>
+          Zaporka:
           <input type="password" name="password" id="password" />
-        </Label>
+        </label>
       </div>
 
-      <input type="submit" value="Log in" />
+      <input type="submit" value="Prijavi se" />
     </form>
   </body>
 </html>
