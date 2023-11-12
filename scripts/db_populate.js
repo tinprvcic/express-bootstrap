@@ -14,13 +14,18 @@ const action = async () => {
   });
 
   await db.execute("insert into users(username, password) values (?, ?);", [
-    "user",
+    "ivo",
     await getPasswordHash("devdevdev"),
   ]);
 
   await db.execute("insert into users(username, password) values (?, ?);", [
-    "admin",
-    await getPasswordHash("admin"),
+    "marko",
+    await getPasswordHash("devdevdev"),
+  ]);
+
+  await db.execute("insert into users(username, password) values (?, ?);", [
+    "ana",
+    await getPasswordHash("devdevdev"),
   ]);
 
   db.destroy();
