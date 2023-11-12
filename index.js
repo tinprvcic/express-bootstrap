@@ -33,6 +33,7 @@ async function main() {
 
   app.get("/", async function (req, res) {
     if (!req.session.isAuthenticated) return res.redirect("login");
+    if (!req.session.userId) return res.render("pages/5xx");
 
     const usersRes = await db.execute(
       "select username, password, sde_enabled as sde, xss_enabled as xss from users where user_id=?;",
@@ -41,7 +42,7 @@ async function main() {
     const user = usersRes[0][0];
 
     const postsRes = await db.execute(
-      "select post_id as id, content, username as author, users.user_id as authorId from users inner join posts on users.user_id = posts.user_id;"
+      "select post_id as id, content, username as author, users.user_id as authorId from users inner join posts on users.user_id = posts.user_id order by post_id asc;"
     );
     const posts = postsRes[0].map((p) => ({
       ...p,
@@ -100,6 +101,8 @@ async function main() {
   });
 
   app.post("/api/change_password", async function (req, res) {
+    if (!req.session.userId) return res.render("pages/5xx");
+
     const { password, sde } = req.body;
 
     const newPassword = sde ? password : await getPasswordHash(password);
@@ -113,15 +116,17 @@ async function main() {
   });
 
   app.post("/api/delete_post/:id", async function (req, res) {
-    db.execute("delete from posts where post_id=?", [req.params.id]);
+    await db.execute("delete from posts where post_id=?", [req.params.id]);
 
     res.redirect("/");
   });
 
   app.post("/api/add_post", async function (req, res) {
+    if (!req.session.userId) return res.render("pages/5xx");
+
     const { content } = req.body;
 
-    db.execute("insert into posts(content, user_id) values (?, ?)", [
+    await db.execute("insert into posts(content, user_id) values (?, ?)", [
       content,
       req.session.userId,
     ]);
@@ -130,7 +135,9 @@ async function main() {
   });
 
   app.post("/api/toggle_xss/:newState", async function (req, res) {
-    db.execute("update users set xss_enabled = ? where user_id = ?", [
+    if (!req.session.userId) return res.render("pages/5xx");
+
+    await db.execute("update users set xss_enabled = ? where user_id = ?", [
       req.params.newState === "1" ? true : false,
       req.session.userId,
     ]);
@@ -145,7 +152,6 @@ async function main() {
   });
 
   app.listen(process.env.PORT || 8080);
-  console.log("listening");
 }
 
 main();

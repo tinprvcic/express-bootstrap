@@ -5,24 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Log in</title>
   </head>
-  <body>
-    <form action="/api/login" method="post">
+  <body
+    style="
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #f3f3f3;
+      font-family: 'Segoe UI', Inter, Tahoma, Geneva, Verdana, sans-serif;
+    "
+  >
+    <form
+      action="/api/login"
+      method="post"
+      style="
+        background-color: white;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        border-radius: 16px;
+        border: 1px solid lightgray;
+        width: 260px;
+      "
+    >
       <% if (error) { %>
       <legend>Neispravno korisničko ime ili zaporka.</legend>
       <% } %>
 
-      <div>
-        <label>
-          Korisničko ime:
-          <input type="text" name="username" id="username" />
-        </label>
+      <div style="display: flex; flex-direction: column">
+        <label for="username"> Korisničko ime</label>
+        <input type="text" name="username" id="username" />
       </div>
 
-      <div>
-        <label>
-          Zaporka:
-          <input type="password" name="password" id="password" />
-        </label>
+      <div style="display: flex; flex-direction: column">
+        <label for="password"> Zaporka</label>
+        <input type="password" name="password" id="password" />
       </div>
 
       <input type="submit" value="Prijavi se" />

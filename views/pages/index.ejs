@@ -16,14 +16,28 @@
       box-sizing: border-box;
       margin: 0;
       padding: 20px;
+      background-color: #f3f3f3;
     "
   >
-    <div>
+    <style>
+      p {
+        margin: 0;
+      }
+    </style>
+
+    <div
+      style="display: flex; flex-direction: column; gap: 8px; max-width: 668px"
+    >
       <div
         style="
           display: flex;
           justify-content: space-between;
           align-items: center;
+          background-color: white;
+          padding: 20px;
+          gap: 16px;
+          border-radius: 16px;
+          border: 1px solid lightgray;
         "
       >
         <p>Prijavljeni ste kao: <strong><%= user.username %></strong></p>
@@ -32,22 +46,78 @@
           <input type="submit" value="Odjava" />
         </form>
       </div>
-      <hr />
 
-      <div style="flex-direction: column; display: flex; gap: 24px">
+      <div
+        style="
+          flex-direction: column;
+          display: flex;
+          gap: 24px;
+          background-color: white;
+          padding: 20px;
+          gap: 16px;
+          border-radius: 16px;
+          border: 1px solid lightgray;
+        "
+      >
         <div>
+          <h3 style="margin-top: 0">XSS</h3>
+          <p>
+            Za demonstraciju ove ranjivosti implementiran je <i>mini forum</i> -
+            popis objava i njihovih autora. Sadržaj objava sprema se u bazu
+            podataka, a sve se objave prikazuju svim korisnicima. Kada je XSS
+            ranjivost omogućena, aplikacija neće sanitizirati korisničke podatke
+            pa je moguće izvesti napad, npr. dodavanjem objave koja sadrži
+            jednostavnu skriptu:
+          </p>
+
+          <pre>&#60;script&#62;alert("hello xss");&#60;/script&#62;</pre>
+
+          <p>
+            Ako kopirate i dodate ovu skriptu kao objavu, svaki puta (nakon što
+            omogućite XSS ranjivost - klikom na gumb) kada otvorite stranicu u
+            skočnoj kartici preglednika ispisati će se <i>hello xss</i>.
+          </p>
+
+          <form
+            method="post"
+            action="<%= `/api/toggle_xss/${user.xss ? 0 : 1}` %>"
+            style="
+              display: flex;
+              align-items: center;
+              gap: 24px;
+              margin-top: 16px;
+              padding-bottom: 16px;
+              border-bottom: 1px solid lightgray;
+            "
+          >
+            <p>XSS <strong><%= user.xss ? "je" : "nije" %></strong> omogućen</p>
+            <input value="<%= user.xss ? "Onemogući XSS" : "Omogući XSS" %>"
+            type="submit" />
+          </form>
           <% posts.forEach((p) => { %>
           <form
             method="post"
             action="<%= `/api/delete_post/${p.id}` %>"
-            style="display: flex; gap: 16px; align-items: center"
+            style="
+              display: flex;
+              gap: 16px;
+              align-items: flex-start;
+              justify-content: space-between;
+              padding: 16px;
+              border-bottom: 1px solid lightgray;
+            "
           >
-            <p><%= p.author %></p>
-            <% if (user.xss) { %>
-            <p><%- p.content %></p>
-            <% } else { %>
-            <p><%= p.content %></p>
-            <% } %> <% if (p.viewerIsAuthor) { %>
+            <div style="display: flex; flex-direction: column; gap: 4px">
+              <p style="font-size: 14px">
+                Autor: <strong><%= p.author %></strong>
+              </p>
+              <% if (user.xss) { %>
+              <p><%- p.content %></p>
+              <% } else { %>
+              <p><%= p.content %></p>
+              <% } %>
+            </div>
+            <% if (p.viewerIsAuthor) { %>
             <input type="submit" value="Obriši" />
             <% } %>
           </form>
@@ -57,55 +127,75 @@
         <form
           method="post"
           action="/api/add_post"
-          style="display: flex; gap: 24px; align-items: center"
+          style="
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: stretch;
+          "
         >
-          <label>
-            <input type="text" name="content" id="content" />
-          </label>
+          <textarea
+            type="text"
+            name="content"
+            id="content"
+            placeholder="Unesite sadržaj nove objave"
+            required
+          ></textarea>
 
           <input type="submit" value="Dodaj objavu" />
         </form>
-
-        <form
-          method="post"
-          action="<%= `/api/toggle_xss/${user.xss ? 0 : 1}` %>"
-          style="display: flex; align-items: center; gap: 24px"
-        >
-          <p>XSS <strong><%= user.xss ? "je" : "nije" %></strong> omogućen</p>
-          <input value="<%= user.xss ? "Onemogući XSS" : "Omogući XSS" %>"
-          type="submit" />
-        </form>
       </div>
 
-      <hr />
+      <div
+        style="
+          background-color: white;
+          padding: 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          border-radius: 16px;
+          border: 1px solid lightgray;
+        "
+      >
+        <h3 style="margin: 0">Sensitive Data Exposure</h3>
 
-      <p>
-        "Sensitive Data Exposure" ranjivost
-        <strong><%= user.sde ? "je" : "nije" %></strong>
-        uključena. Zapis Vaše zaporke u bazi je:
-      </p>
-      <p>
-        <strong style="word-break: break-all"><%= user.password %></strong>
-      </p>
+        <p>
+          Za demonstraciju ove ranjivosti koristi se zaporka računa. Kroz
+          sučelje ispod moguće je mijenjati korisničku zaporku, a ovisno o tome
+          je li <i>checkbox</i> označen, zaporka će se spremiti u tekstualnom
+          obliku - bez zaštite, ili zaštićena bcrypt algoritmom.
+        </p>
 
-      <form action="/api/change_password" method="post">
-        <div>
-          <label>
-            Nova zaporka:
-            <input type="password" name="password" id="password" required />
-          </label>
+        <p>
+          <i>Sensitive Data Exposure</i> ranjivost
+          <strong><%= user.sde ? "je" : "nije" %></strong>
+          uključena.
+        </p>
+
+        <p>Zapis Vaše zaporke u bazi je:</p>
+
+        <p>
+          <strong style="word-break: break-all"><%= user.password %></strong>
+        </p>
+
+        <form
+          action="/api/change_password"
+          method="post"
+          style="display: flex; flex-direction: column; gap: 12px"
+        >
+          <label for="password"> Nova zaporka: </label>
+          <input type="password" name="password" id="password" required />
 
           <div>
             <label>
               <input type="checkbox" id="sde" name="sde" value="sde" />
-              Uključi "Sensitive Data Exposure" ranjivost (nemoj spremiti
-              zaporku na siguran način)
+              Omogući <i>Sensitive Data Exposure</i> ranjivost
             </label>
           </div>
-        </div>
 
-        <input type="submit" value="Promijeni zaporku" />
-      </form>
+          <input type="submit" value="Promijeni zaporku" />
+        </form>
+      </div>
     </div>
   </body>
 </html>
